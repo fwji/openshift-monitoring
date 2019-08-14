@@ -15,7 +15,7 @@ Setup Standalone Prometheus and Grafana on Openshift. The deployment yaml file a
 [root@rhel7-openshift ~]# oc new-app "frankji/liberty-ltf" --name ltf
 ```
 
-3. Verify metrics end point http://<approute>/metrics is up.
+3. Verify metrics end point http://approute.nip.io/metrics is up.
 
 
 ### Deploy Prometheus
