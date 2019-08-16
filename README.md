@@ -25,12 +25,17 @@ Setup Standalone Prometheus and Grafana on Openshift. The deployment yaml file a
 [root@rhel7-openshift ~]# oc new-project prometheus
 ```
 
-2. Deploy Standalone Prometheus with system:auth-delegator cluster role
+2. Make sure the promethues project have global network access
+```
+oc adm pod-network make-projects-global prometheus
+```
+
+3. Deploy Standalone Prometheus with system:auth-delegator cluster role
 ```
 [root@rhel7-openshift ~]# oc new-app -f prometheus_byo.yaml -p NAMESPACE=prometheus
 ```
 
-3. Edit the "prometheus" ConfigMap and create a new scrape job to monitor the liberty application
+4. Edit the "prometheus" ConfigMap and create a new scrape job to monitor the liberty application
 ```
 ...
 scrape_configs:
@@ -41,11 +46,11 @@ scrape_configs:
 ...
 ```
 
-4. Reload the prometheus service gracefully
+5. Reload the prometheus service gracefully
 ```
 [root@rhel7-openshift ~]# oc exec prometheus-0 -c prometheus -- curl -X POST http://localhost:9090/-/reload
 ```
-5. Verify the scrape target is up and available in Prometheus by visitng Promethues Console -> Status -> Targets 
+6. Verify the scrape target is up and available in Prometheus by visitng Promethues Console -> Status -> Targets 
 
 ### Deploy Grafana
 
