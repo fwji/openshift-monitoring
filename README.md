@@ -4,7 +4,11 @@ Setup Standalone Prometheus and Grafana on Openshift. The deployment yaml file a
 [https://github.com/openshift/origin/tree/master/examples/prometheus](https://github.com/openshift/origin/tree/master/examples/prometheus)
 [https://github.com/openshift/origin/tree/master/examples/grafana](https://github.com/openshift/origin/tree/master/examples/grafana)
 
-### Deploy A Sample Application with MP Metrics Endpoint
+## Introduction
+When it comes to applicaiton monitoring on openshift, Openshift Prometheus Cluster Monitoring feature is usually the first showing up on the google search result. It is a openshift feature that can be installed by one command via Openshift ansible playbooks. It packages both Prometheus Operator and Grafana in a single installation. It shoulds like a one click approach for all your monitoring needs, except well, it is not! The Prometheus Cluster Monitoring is not meant ot be modifed in anyways by the user when it comes to the scrape targets and other prometheus configuration. Its purpose is to monitor a selective of openshift and kubernetes namespaces and provide a dashboard view on Grafana to show the user how the kubernetes system is doing. As a result, you cannot really rely this feature for your day-to-day application monitoring needs. For application monitoring on Kubernetes, there are currently two approach to setup Prometheus on your cluster: 1. standalone Prometheus deployment yaml provide by Openshift and 2. Prometheus Operator. We'll introduce both approach in this guides.
+
+
+## Deploy A Sample Application with MP Metrics Endpoint
 1. Create a new namespaces 
 ```
 [root@rhel7-openshift ~]# oc new-project ltf
@@ -18,7 +22,7 @@ Setup Standalone Prometheus and Grafana on Openshift. The deployment yaml file a
 3. Verify metrics end point http://approute.nip.io/metrics is up.
 
 
-### Deploy Prometheus
+## Deploy Prometheus - Standalone deployments
 
 1. Create a new project called prometheus
 ```
@@ -52,7 +56,18 @@ scrape_configs:
 ```
 6. Verify the scrape target is up and available in Prometheus by visitng Promethues Console -> Status -> Targets 
 
-### Deploy Grafana
+## Deploy Prometheus - Prometheus Operator
+
+The Prometheus Operator is an opensource project form CoreOS. It's starting to become the de facto standard for Prometheus deployments on Kubernetes system. When Prometheus Operator is installed on the Kubernetes system , user no longer needs to deal with prometheus.yml file to define the scrape targets. Instead, ServiceMonitors objects are being created for each of the service endpoint that needs to be monitored, which makes maintaning the Prometheus stack a lot easier in daily operation use cases. 
+
+There are two ways to install Prometheus Operator. One is through Openshift Operator Lifecycle Manager, which is still in its technology preview phase in Openshift 3.11. This approach will install an older version of Prometheus Operator that's supported by Openshift and Redhat. Another approach is to install Prometheus Operator using the bundle.yaml file from its official git repository. 
+
+### Prometheus Operator Installation via OLM
+
+1. OLM should be installed on your cluster. 
+
+
+## Deploy Grafana
 
 1. Create a new project called grafana
 ```
