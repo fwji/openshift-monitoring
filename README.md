@@ -116,20 +116,60 @@ There are two ways to install Prometheus Operator. One is through Openshift Oper
 ```
 
 3. Go to Cluster Console page of the openshift web portal
+![Cluster Console Page](https://github.com/fwji/images/blob/master/cluster-console.png?raw=true "Cluster Console Page")
 
-4. Clic on the Operators drop-down arrow and select Catalog Sources link
+4. Clic on the Operators item and select Catalog Sources link
 
 5. Scroll down to the bottom and click on the *Create Subscription* button of the Prometheus Operator
 
 6. Change the namespace to *prometheus* and click *Create*
-
+```apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  generateName: prometheus-
+  namespace: prometheus
+spec:
+  source: rh-operators
+  name: prometheus
+  startingCSV: prometheusoperator.0.22.2
+  channel: preview
+```
 #### Deploy a Prometheus Server
 
 1. Click the *Cluster Service Version* on the left panel and click on the Prometheus Operator instance we just created
 
 2. Select Create New Promtheus from the drop down button. 
 
+![New Prometheus](https://github.com/fwji/images/blob/master/prometheus_server.png?raw=true "New Prometheus")
+
 3. Choose a name for your prometheus server and change the namespace to "promtheus"
+```
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus-server
+  labels:
+    prometheus: k8s
+  namespace: prometheus
+spec:
+  replicas: 2
+  version: v2.3.2
+  serviceAccountName: prometheus-k8s
+  securityContext: {}
+  serviceMonitorSelector:
+    matchExpressions:
+      - key: k8s-app
+        operator: Exists
+  ruleSelector:
+    matchLabels:
+      role: prometheus-rulefiles
+      prometheus: k8s
+  alerting:
+    alertmanagers:
+      - namespace: prometheus
+        name: alertmanager-main
+        port: web
+```
 
 4. Click on the *Create* button
 
@@ -153,6 +193,7 @@ oc expose svc/prometheus-operated -n prometheus
 2. Click the *Cluster Service Version* on the left panel and click on the Prometheus Operator instance we just created
 
 3. Select *Create New -> Service Monitor*
+![New Service Monitor](https://github.com/fwji/images/blob/master/service_monitor.png?raw=true)
 
 4. Edit the Service Monitor yaml to include target endpoint information. You can use namespaceSelector or selector or both to filter the project or the service endpoint that needs to be scraped by Prometheus server.
 ```
