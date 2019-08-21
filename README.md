@@ -240,25 +240,25 @@ oc adm pod-network make-projects-global prometheus
 
 2. Deploy Grafana
 ```
-[root@rhel-2EFK ~]# oc new-app -f grafana_byo.yaml -p NAMESPACE=grafana
+[root@rhel-2EFK ~]# oc new-app -f https://raw.githubusercontent.com/openshift/origin/master/examples/grafana/grafana.yaml -p NAMESPACE=grafana
 ```
 
 3. Grant grafana service account view access to prometheus
 ```
-oc policy add-role-to-user view system:serviceaccount:grafana:grafana-ocp -n prometheus
+oc policy add-role-to-user view system:serviceaccount:grafana:grafana -n prometheus
 ```
 
 4. In order for grafana to connect to prometheus datasource in openshift, one would need to define the datasource in a ConfigMap under grafana namespace.
-  - Create a Configmap called 'grafana-datasources'
+  - Create a ConfigMap called 'grafana-datasources'
   - For the key value pair, enter 'datasources.yaml' for key
   - Enter the following for value
 ```
 apiVersion: 1
-`datasources:
+datasources:
   - name: "OCP Prometheus"
     type: prometheus
     access: proxy
-    url: <prometheus route>
+    url: https://route.to.prometheues.app
     basicAuth: false
     withCredentials: false
     isDefault: true
@@ -266,11 +266,12 @@ apiVersion: 1
         tlsSkipVerify: true
         "httpHeaderName1": "Authorization"
     secureJsonData:
-        "httpHeaderValue1": "Bearer <grafana-ocp token>:
+        "httpHeaderValue1": "Bearer [grafana-ocp token]"
+    editable: true
 ```
-   - The <grafana-ocp token> can be acquired by the following command
+   - The \[grafana-ocp token\] can be acquired by the following command
   ```
-  oc sa get-token grafana-ocp
+  oc sa get-token grafana
   ```
   
 5. Add the config map the application grafana-ocp and mount to '/usr/share/grafana/datasources'
