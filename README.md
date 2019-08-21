@@ -1,11 +1,11 @@
 # openshift-monitoring
-This guides used sample OKD templates for deploying bring-your-own prometheus and grafana. The links of the original templates repository are listed below:
+This guides used sample OKD templates for deploying bring-your-own Prometheus and Grafana. The links of the original templates repository are listed below:
 
 [https://github.com/openshift/origin/tree/master/examples/prometheus](https://github.com/openshift/origin/tree/master/examples/prometheus)
 [https://github.com/openshift/origin/tree/master/examples/grafana](https://github.com/openshift/origin/tree/master/examples/grafana)
 
 ## Introduction
-When it comes to applicaiton monitoring on openshift, Openshift Prometheus Cluster Monitoring feature is usually the first showing up on the google search result. It is a openshift feature that can be installed by one command via Openshift ansible playbooks. It packages both Prometheus Operator and Grafana in a single installation. It shoulds like a one click approach for all your monitoring needs, except well, it is not! The Prometheus Cluster Monitoring is not meant ot be modifed in anyways by the user when it comes to the scrape targets and other prometheus configuration. Its purpose is to monitor a selective of openshift and kubernetes namespaces and provide a dashboard view on Grafana to show the user how the kubernetes system is doing. As a result, you cannot really rely this feature for your day-to-day application monitoring needs. For application monitoring on Kubernetes, there are currently two approach to setup Prometheus on your cluster: 1. standalone Prometheus deployment yaml provide by Openshift and 2. Prometheus Operator. We'll introduce both approach in this guides.
+When it comes to application monitoring on Openshift, Openshift Prometheus Cluster Monitoring feature is usually the first showing up on the google search result. It is an Openshift feature that can be installed by one command via Openshift ansible playbooks. It packages both Prometheus Operator and Grafana in a single installation. It shoulds like a one-click approach for all your monitoring needs, except well, it is not! The Prometheus Cluster Monitoring is not meant to be modified in anyways by the user when it comes to the scrape targets and other Prometheus configuration. Its purpose is to monitor a selective of Openshift and Kubernetes namespaces and provide a dashboard view on Grafana to show the user how the Kubernetes system is doing. As a result, you cannot rely on this feature for your day-to-day application monitoring needs. For application monitoring on Kubernetes, there are currently two approaches to setup Prometheus on your cluster: 1. standalone Prometheus deployment YAML provide by Openshift and 2. Prometheus Operator. We'll introduce both approaches in this guide.
 
 
 ## Deploy A Sample Application with MP Metrics Endpoint
@@ -19,17 +19,17 @@ When it comes to applicaiton monitoring on openshift, Openshift Prometheus Clust
 [root@rhel7-openshift ~]# oc new-app "frankji/liberty-ltf" --name ltf
 ```
 
-3. Verify metrics end point http://approute.nip.io/metrics is up.
+3. Verify metrics endpoint http://approute.nip.io/metrics is up.
 
 
 ## Deploy Prometheus - Standalone deployments
 
-1. Create a new project called prometheus
+1. Create a new project called Prometheus
 ```
-[root@rhel7-openshift ~]# oc new-project prometheus
+[root@rhel7-openshift ~]# oc new-project Prometheus
 ```
 
-2. Deploy Standalone Prometheus with a serviceaccount that can scrape the entire cluster
+2. Deploy Standalone Prometheus with a ServiceAccount that can scrape the entire cluster
 ```
 [root@rhel7-openshift ~]# oc new-app -f https://raw.githubusercontent.com/openshift/origin/master/examples/prometheus/prometheus.yaml -p NAMESPACE=prometheus
 ```
@@ -96,7 +96,7 @@ oc adm pod-network make-projects-global prometheus
 
 ## Deploy Prometheus - Prometheus Operator
 
-The Prometheus Operator is an opensource project from CoreOS. It's starting to become the de facto standard for Prometheus deployments on Kubernetes system. When Prometheus Operator is installed on the Kubernetes system , user no longer needs to deal with prometheus.yml file to define the scrape targets. Instead, ServiceMonitors objects are being created for each of the service endpoint that needs to be monitored, which makes maintaning the Prometheus stack a lot easier in daily operation. An overview architecure of the prometheus is shown below:
+The Prometheus Operator is an opensource project from CoreOS. It's starting to become the de facto standard for Prometheus deployments on Kubernetes system. When Prometheus Operator is installed on the Kubernetes system, usesr no longer needs to deal with prometheus.yml file to define the scrape targets. Instead, ServiceMonitors objects are being created for each of the service endpoint that needs to be monitored, which makes maintaining the Prometheus stack a lot easier in daily operation. An overview architecture of the Prometheus is shown below:
 
 ![Prometheus Operator](https://miro.medium.com/max/1400/1*R7cnpxuu-vWYkq7ciAPA_w.png "Prometheus Operator Architecture")
 
@@ -104,21 +104,21 @@ There are two ways to install Prometheus Operator. One is through Openshift Oper
 
 ### Prometheus Operator Installation via OLM
 
-* Make sure that you have a redhat customer portal user id before proceeding to the following sections
+* Make sure that you have a Redhat customer portal user id before proceeding to the following sections
 
 #### Install Prometheus Operator
 
-1. OLM should be installed on your cluster if it has not been setup. Follow [this guide](https://docs.openshift.com/container-platform/3.11/install_config/installing-operator-framework.html) on openshift to install OLM. 
+1. OLM should be installed on your cluster if it has not been setup. Follow [this guide](https://docs.openshift.com/container-platform/3.11/install_config/installing-operator-framework.html) on Openshift to install OLM. 
 
 2. Create a new project called prometheus
 ```
 [root@rhel7-openshift ~]# oc new-project prometheus
 ```
 
-3. Go to Cluster Console page of the openshift web portal
+3. Go to Cluster Console page of the Openshift web portal
 ![Cluster Console Page](https://github.com/fwji/images/blob/master/cluster-console.png?raw=true "Cluster Console Page")
 
-4. Clic on the Operators item and select Catalog Sources link
+4. Click on the Operators item and select Catalog Sources link
 
 5. Scroll down to the bottom and click on the *Create Subscription* button of the Prometheus Operator
 
@@ -138,7 +138,7 @@ spec:
 
 1. Click the *Cluster Service Version* on the left panel and click on the Prometheus Operator instance we just created
 
-2. Select Create New Promtheus from the drop down button. 
+2. Select Create New Prometheus from the drop-down button. 
 
 ![New Prometheus](https://github.com/fwji/images/blob/master/prometheus_server.png?raw=true "New Prometheus")
 
@@ -173,7 +173,7 @@ spec:
 
 4. Click on the *Create* button
 
-5. Make sure the promtheus server pods are up and running
+5. Make sure the Prometheus server pods are up and running
 ```
 [root@rhel-2EFK ~]# oc get pods -n prometheus
 NAME                                   READY     STATUS    RESTARTS   AGE
@@ -181,7 +181,7 @@ prometheus-operator-7fccbd7c74-5cz24   1/1       Running   0          3d
 prometheus-server-0                    3/3       Running   1          3d
 prometheus-server-1                    3/3       Running   1          3d
 ```
-6. Expose promethues console so that it can be accessed externally.
+6. Expose Prometheus console so that it can be accessed externally.
 ```
 oc expose svc/prometheus-operated -n prometheus
 ```
@@ -195,7 +195,7 @@ oc expose svc/prometheus-operated -n prometheus
 3. Select *Create New -> Service Monitor*
 ![New Service Monitor](https://github.com/fwji/images/blob/master/service_monitor.png?raw=true)
 
-4. Edit the Service Monitor yaml to include target endpoint information. You can use namespaceSelector or selector or both to filter the project or the service endpoint that needs to be scraped by Prometheus server.
+4. Edit the Service Monitor YAML to include target endpoint information. You can use namespaceSelector or selector or both to filter the project or the service endpoint that needs to be scraped by Prometheus server.
 ```
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
@@ -218,12 +218,12 @@ spec:
 ```
 5. Click on the *Create* button
 
-6. Lastly, we need to give our prometheus service view permission all the cluster namespaces
+6. Lastly, we need to give our Prometheus service view permission all the cluster namespaces
 ```
 oc adm policy add-cluster-role-to-user view system:serviceaccount:monitoring:prometheus-k8s
 ```
 
-7. Verify the scrape target is up and available in Prometheus by visitng Promethues Console -> Status -> Targets 
+7. Verify the scrape target is up and available in Prometheus by visiting Promethues Console -> Status -> Targets 
 
 8. If the service endpoint is discovered, but Prometheus is reporting a *DOWN* status, you need to make Prometheus project to be globally accessible.
 ```
@@ -243,14 +243,14 @@ oc adm pod-network make-projects-global prometheus
 [root@rhel-2EFK ~]# oc new-app -f https://raw.githubusercontent.com/openshift/origin/master/examples/grafana/grafana.yaml -p NAMESPACE=grafana
 ```
 
-3. Grant grafana service account view access to prometheus
+3. Grant Grafana service account view access to Prometheus
 ```
 oc policy add-role-to-user view system:serviceaccount:grafana:grafana -n prometheus
 ```
 
-4. In order for grafana to connect to prometheus datasource in openshift, one would need to define the datasource in a ConfigMap under grafana namespace.
+4. In order for Grafana to connect to Prometheus datasource in Openshift, one would need to define the datasource in a ConfigMap under grafana namespace.
   - Create a ConfigMap called 'grafana-datasources'
-  - For the key value pair, enter 'datasources.yaml' for key
+  - For the key-value pair, enter 'datasources.yaml' for key
   - Enter the following for value
 ```
 apiVersion: 1
@@ -276,5 +276,5 @@ datasources:
   
 5. Add the config map the application grafana-ocp and mount to '/usr/share/grafana/datasources'
 
-6. Save and test the data source. You should see 'Datasource is working'
+6. Save and test the data source. You should see 'Datasource is working.'
   
