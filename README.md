@@ -1,5 +1,5 @@
 # openshift-monitoring
-Setup Standalone Prometheus and Grafana on Openshift. The deployment yaml file are based on openshift provided prometheus and grafana templates. 
+This guides used sample OKD templates for deploying bring-your-own prometheus and grafana. The links of the original templates repository are listed below:
 
 [https://github.com/openshift/origin/tree/master/examples/prometheus](https://github.com/openshift/origin/tree/master/examples/prometheus)
 [https://github.com/openshift/origin/tree/master/examples/grafana](https://github.com/openshift/origin/tree/master/examples/grafana)
