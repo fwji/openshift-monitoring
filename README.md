@@ -230,6 +230,134 @@ oc adm policy add-cluster-role-to-user view system:serviceaccount:monitoring:pro
 oc adm pod-network make-projects-global prometheus
 ```
 
+### Prometheus Operator Installation without OLM
+
+If you don't have a paid Redhat subscription account, or if you want to use the latest release of Prometheus Operator instead of the version offered by openshift, you can install Prometheus Operator without OLM.
+
+Let's start by cloning the Promtheus Operator project repostiory.
+
+1. Clone the repository
+```
+[root@rhel7-openshift ~]# git clone https://github.com/coreos/prometheus-operator
+```
+
+2. Open the bundle.yaml file and change all instances *namespace: default* to the namespace where you want to deploy the prometheus operator. In this example, we'll use *namespace: prometheus-operator*.
+
+3. Deploy the the prometheus-operator. You might have to change *runAsUser: 65534* field to a different value to avoid the user out of range error. 
+```
+[root@rhel7-openshift ~]# oc apply -f bundle.yaml
+```
+
+4. Create a ServiceMonitor.yaml file that defines a ServiceMounitor resource. 
+```
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    k8s-app: myapp-monitor
+  name: myapp-monitor
+  namespace: myapp
+spec:
+  endpoints:
+    - interval: 30s
+      path: /metrics
+      port: 9080-tcp
+  namespaceSelector:
+    matchNames:
+      - myapp
+  selector:
+    matchLabels:
+      app: myapp
+
+```
+
+5. Apply the ServiceMonitor yaml file
+
+```
+[root@rhel7-openshift ~]# oc apply -f service_monitor.yaml
+```
+
+6. Lastly, we'll need to define the prometheus service that will detect the targets defined in the ServiceMonitor resource. 
+We'll create a prometheus.yaml file that are based on the sample resources defined under the repository directory prometheus-operator/example/rbac/prometheus/. Make sure to change the namespace to the one that hosts the Prometheus Operator deployment.
+
+```
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: prometheus
+rules:
+- apiGroups: [""]
+  resources:
+  - nodes
+  - services
+  - endpoints
+  - pods
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources:
+  - configmaps
+  verbs: ["get"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus
+subjects:
+- kind: ServiceAccount
+  name: prometheus
+  namespace: prometheus-operator
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus
+  namespace: prometheus-operator
+spec:
+  serviceAccountName: prometheus
+  serviceMonitorNamespaceSelector:
+    matchLabels:
+      prometheus: monitoring
+  serviceMonitorSelector:
+    matchExpressions:
+      - key: k8s-app
+        operator: Exists
+  resources:
+    requests:
+      memory: 400Mi
+  enableAdminAPI: false
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: prometheus-operator
+spec:
+  type: NodePort
+  ports:
+  - name: web
+    port: 9090
+    protocol: TCP
+    targetPort: web
+  selector:
+    prometheus: prometheus
+```
+
+7. Apply the prometheus yaml file to deploy the prometheus service
+
+```
+[root@rhel7-openshift ~]# oc apply -f service_monitor.yaml
+```
 
 ## Deploy Grafana
 
