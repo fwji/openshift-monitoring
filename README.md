@@ -223,7 +223,7 @@ spec:
 oc adm policy add-cluster-role-to-user view system:serviceaccount:monitoring:prometheus-k8s
 ```
 
-7. Verify the scrape target is up and available in Prometheus by visiting Promethues Console -> Status -> Targets 
+7. Verify the scrape target is up and available in Prometheus by visiting Prometheus Console -> Status -> Targets 
 
 8. If the service endpoint is discovered, but Prometheus is reporting a *DOWN* status, you need to make Prometheus project to be globally accessible.
 ```
@@ -234,7 +234,7 @@ oc adm pod-network make-projects-global prometheus
 
 If you don't have a paid Redhat subscription account, or if you want to use the latest release of Prometheus Operator instead of the version offered by openshift, you can install Prometheus Operator without OLM.
 
-Let's start by cloning the Promtheus Operator project repostiory.
+Let's start by cloning the Prometheus Operator project repository.
 
 1. Clone the repository
 ```
@@ -243,7 +243,7 @@ Let's start by cloning the Promtheus Operator project repostiory.
 
 2. Open the bundle.yaml file and change all instances *namespace: default* to the namespace where you want to deploy the prometheus operator. In this example, we'll use *namespace: prometheus-operator*.
 
-3. Deploy the the prometheus-operator. You might have to change *runAsUser: 65534* field to a different value to avoid the user out of range error. 
+3. Deploy the prometheus-operator. You might have to change *runAsUser: 65534* field to a different value to avoid the user out of range error. 
 ```
 [root@rhel7-openshift ~]# oc apply -f bundle.yaml
 ```
@@ -272,14 +272,12 @@ spec:
 ```
 
 5. Apply the ServiceMonitor yaml file
-
 ```
 [root@rhel7-openshift ~]# oc apply -f service_monitor.yaml
 ```
 
-6. Lastly, we'll need to define the prometheus service that will detect the targets defined in the ServiceMonitor resource. 
-We'll create a prometheus.yaml file that are based on the sample resources defined under the repository directory prometheus-operator/example/rbac/prometheus/. Make sure to change the namespace to the one that hosts the Prometheus Operator deployment.
-
+6. Lastly, we'll need to define the Prometheus service that will detect the targets defined in the ServiceMonitor resource. 
+We'll create a prometheus.yaml file that are mostly based on the sample resources defined under the directory prometheus-operator/example/rbac/prometheus/. Make sure to change the namespace to the one that hosts the Prometheus Operator deployment.
 ```
 apiVersion: v1
 kind: ServiceAccount
@@ -353,10 +351,49 @@ spec:
     prometheus: prometheus
 ```
 
-7. Apply the prometheus yaml file to deploy the prometheus service
+7. Apply the prometheus yaml file to deploy the prometheus service. After all the resources are created, apply the Prometheus Operator bundle yaml file again.
 
 ```
 [root@rhel7-openshift ~]# oc apply -f service_monitor.yaml
+[root@rhel7-openshift ~]# oc apply -f bundle.yaml
+```
+
+8. Verify the Prometheus services have successfully started. The prometheus-operated service is created automatically by the prometheus-operator once a Prometheus resource is deployed in the same namespace as the Prometheus Operator.
+
+```
+[root@rhel-2EFK ~]# oc get svc -n prometheus-operator
+NAME                  TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)          AGE
+prometheus            NodePort    172.30.112.199   <none>        9090:30342/TCP   19h
+prometheus-operated   ClusterIP   None             <none>        9090/TCP         19h
+prometheus-operator   ClusterIP   None             <none>        8080/TCP         21h
+```
+
+9. expose the prometheus-operated service so that we can access the Prometheus console externally.
+```
+[root@rhel-2EFK]# oc expose svc/prometheus-operated -n prometheus-operator
+[root@rhel-2EFK]# oc get route -n prometheus-operator
+NAME         HOST/PORT                                                 PATH      SERVICES     PORT      TERMINATION   WILDCARD
+prometheus   prometheus-prometheus-operator.apps.9.37.135.153.nip.io             prometheus   web                     None
+```
+
+10. Visit the Prometheus route and view the targets page. At this point, you should an empty targets page. Don't worry as that's expected, and there is one more step to get the targets showing up. Let's review our Prometheus yaml file again. We defined both serviceMonitorNamespaceSelector and serviceMonitorSelector in the yaml file. That means ServiceMonitor needs to satisfy the matching requirement for both service monitor selectors to be picked up by our Prometheus service. In this case, our service monitor has the *k8s-app* label, but the target namespace "myapp" is missing the required *prometheus: monitoring* label.
+```
+  serviceMonitorNamespaceSelector:
+    matchLabels:
+      prometheus: monitoring
+  serviceMonitorSelector:
+    matchExpressions:
+      - key: k8s-app
+        operator: Exists
+```
+We'll have to add the label to "myapp" namespace.
+```
+oc label namespace myapp prometheus=monitoring
+```
+
+11. Now you should see the Prometheus targets page is discovering the target endpoints. If the service endpoint is discovered, but Prometheus is reporting a *DOWN* status, you need to make Prometheus project to be globally accessible.
+```
+oc adm pod-network make-projects-global prometheus
 ```
 
 ## Deploy Grafana
