@@ -275,26 +275,24 @@ oc adm pod-network make-projects-global prometheus
 
 ## Deploy Grafana
 
-Regardless which approach was used for Prometheus deployment on Openshift, the end game is always to use Grafana 
-1. Create a new project called grafana
+Regardless which approach was used for Prometheus deployment on Openshift, the end game is always to use the more feature riched Grafana for dashboard and visualization of the metrics. The installation of Grafana is mostly straight forward using the sample grafana yaml file provided by Openshift origin git repository. There is however some steps involved to add prometheus endpoint reachable as a datasource on Grafana.
+
+First thing first, create a new project called grafana.
 ```
 [root@rhel-2EFK ~]# oc new-project grafana
 ```
 
-2. Deploy Grafana
+Deploy Grafana using the grafana.yaml from openshift origin repository.
 ```
 [root@rhel-2EFK ~]# oc new-app -f https://raw.githubusercontent.com/openshift/origin/master/examples/grafana/grafana.yaml -p NAMESPACE=grafana
 ```
 
-3. Grant Grafana service account view access to Prometheus
+Grant grafana service account view access to the prometheus (or prometheus operator) namespace 
 ```
-oc policy add-role-to-user view system:serviceaccount:grafana:grafana -n prometheus
+[root@rhel-2EFK ~]# oc policy add-role-to-user view system:serviceaccount:grafana:grafana -n prometheus
 ```
 
-4. In order for Grafana to connect to Prometheus datasource in Openshift, one would need to define the datasource in a ConfigMap under grafana namespace.
-  - Create a ConfigMap called 'grafana-datasources'
-  - For the key-value pair, enter 'datasources.yaml' for key
-  - Enter the following for value
+In order for Grafana to add existing prometheus datasource in Openshift, one would need to define the datasource in a ConfigMap resource under grafana namespace. Create a ConfigMap called 'grafana-datasources'. For the key-value pair of the ConfigMap, enter '**datasources.yaml**' for key, and enter the following as the value.
 ```
 apiVersion: 1
 datasources:
@@ -312,12 +310,13 @@ datasources:
         "httpHeaderValue1": "Bearer [grafana-ocp token]"
     editable: true
 ```
-   - The \[grafana-ocp token\] can be acquired by the following command
-  ```
-  oc sa get-token grafana
-  ```
-  
-5. Add the config map the application grafana-ocp and mount to '/usr/share/grafana/datasources'
 
-6. Save and test the data source. You should see 'Datasource is working.'
+The \[grafana-ocp token\] can be acquired by the following command
+```
+[root@rhel-2EFK ~]# oc sa get-token grafana
+```
+  
+Add the config map the application grafana-ocp and mount to '/usr/share/grafana/datasources'
+
+Save and test the data source. You should see 'Datasource is working'. Good job, it is now possible to consume all the application metrics gathered by Prometheus on Grafana dashboard.
   
